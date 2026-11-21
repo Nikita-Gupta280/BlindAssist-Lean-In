@@ -8,35 +8,99 @@ from config import (
 
 class VisionLogic:
 
-    # Approximate reference heights in centimetres.
+    # Approximate real-world object heights in centimetres.
+    # These are assumptions, not exact measurements.
     OBJECT_HEIGHTS = {
         "person": 170,
-        "bottle": 25,
-        "cell phone": 15,
-        "chair": 90,
-        "bench": 90,
+        "bicycle": 110,
         "car": 150,
         "motorcycle": 110,
-        "bicycle": 110,
+        "airplane": 300,
         "bus": 300,
+        "train": 300,
         "truck": 300,
-        "laptop": 22,
-        "book": 25,
+        "boat": 150,
+        "traffic light": 90,
+        "fire hydrant": 75,
+        "stop sign": 75,
+        "parking meter": 120,
+        "bench": 90,
+        "bird": 20,
+        "cat": 25,
+        "dog": 50,
+        "horse": 150,
+        "sheep": 80,
+        "cow": 140,
+        "elephant": 250,
+        "bear": 150,
+        "zebra": 140,
+        "giraffe": 400,
+        "backpack": 45,
+        "umbrella": 90,
+        "handbag": 30,
+        "tie": 140,
+        "suitcase": 60,
+        "bottle": 25,
+        "wine glass": 20,
         "cup": 12,
-        "dining table": 75,
+        "fork": 20,
+        "knife": 25,
+        "spoon": 18,
+        "bowl": 12,
+        "banana": 20,
+        "apple": 9,
+        "sandwich": 10,
+        "orange": 8,
+        "broccoli": 15,
+        "carrot": 18,
+        "hot dog": 15,
+        "pizza": 30,
+        "donut": 10,
+        "cake": 15,
+        "chair": 90,
         "couch": 85,
+        "potted plant": 60,
         "bed": 60,
+        "dining table": 75,
+        "toilet": 75,
+        "tv": 55,
+        "laptop": 22,
+        "mouse": 5,
+        "remote": 18,
+        "keyboard": 4,
+        "cell phone": 15,
+        "microwave": 30,
+        "oven": 60,
+        "toaster": 20,
+        "sink": 25,
         "refrigerator": 170,
+        "book": 25,
+        "clock": 30,
+        "vase": 30,
+        "scissors": 15,
+        "teddy bear": 30,
+        "hair drier": 20,
+        "toothbrush": 18,
     }
 
     def __init__(self, focal_px, known_object_height_cm):
-        self.focal_px = focal_px
+        self.focal_px = float(focal_px)
         self.known_object_height_cm = known_object_height_cm
         self.previous_heights = {}
 
-    def get_zone(self, box, frame_width):
+    @staticmethod
+    def normalize_label(label):
+        if label is None:
+            return ""
 
+        return " ".join(str(label).lower().replace("_", " ").split())
+
+    def get_zone(self, box, frame_width):
         x1, y1, x2, y2 = box
+
+        if frame_width <= 0:
+            return "center"
+
         center_x = (x1 + x2) / 2
         position = center_x / frame_width
 
@@ -52,38 +116,46 @@ class VisionLogic:
             return "far_right"
 
     def get_distance_cm(self, box, label=None):
-
         x1, y1, x2, y2 = box
         height_px = y2 - y1
 
-        if height_px <= 0:
+        if height_px <= 0 or self.focal_px <= 0:
             return None
 
-        known_height = (
-            30 if str(label).lower() == "bottle"
-            else self.known_object_height_cm
-        )
+        normalized_label = self.normalize_label(label)
 
-        distance_cm = (known_height * self.focal_px) / height_px
+        # Do not invent a physical size for an unknown object.
+        real_height_cm = self.OBJECT_HEIGHTS.get(normalized_label)
 
-        return distance_cm
+        if real_height_cm is None:
+            return None
+
+        # Monocular pinhole-camera estimate:
+        # distance = (real object height x focal length in pixels)
+        #            / object's height in image pixels
+        distance_cm = (
+            real_height_cm * self.focal_px
+        ) / height_px
+
+        if not 0 < distance_cm < 2000:
+            return None
+
+        return round(distance_cm, 1)
 
     def get_distance(self, box, label=None):
-
         distance_cm = self.get_distance_cm(box, label)
 
         if distance_cm is None:
-            return "far"
+            return "unavailable"
 
         if distance_cm < CLOSE_DISTANCE:
             return "close"
         elif distance_cm < MEDIUM_DISTANCE:
             return "medium"
-        else:
-            return "far"
+
+        return "far"
 
     def is_approaching(self, track_id, box):
-
         if track_id is None:
             return False
 
