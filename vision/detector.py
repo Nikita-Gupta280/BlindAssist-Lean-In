@@ -100,8 +100,8 @@ class ObjectDetector:
                     frame.shape[1]
                 )
 
-                distance = self.logic.get_distance(coordinates)
-
+                distance_cm = self.logic.get_distance_cm(coordinates, label)
+                distance = self.logic.get_distance(coordinates, label)
                 approaching = self.logic.is_approaching(
                     track_id,
                     coordinates
@@ -113,6 +113,7 @@ class ObjectDetector:
                     "conf": confidence,
                     "zone": zone,
                     "dist": distance,
+                    "distance_cm": distance_cm,
                     "approaching": approaching,
                     "unknown_obstacle": False
                 })

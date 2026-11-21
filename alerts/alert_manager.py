@@ -148,7 +148,8 @@ class AlertManager:
                 distance=detection.get("dist", "far"),
                 language=language,
                 detailed=(mode == "detailed"),
-                approaching=detection.get("approaching", False)
+                approaching=detection.get("approaching", False),
+                distance_cm=detection.get("distance_cm")
             )
 
             self.last_alert_time[key] = current_time

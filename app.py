@@ -419,7 +419,11 @@ def live_dashboard():
                 {
                     "Object": d["label"],
                     "Zone": d["zone"],
-                    "Distance": d["dist"],
+                    "Distance": (
+                        f"{d['distance_cm'] / 100:.1f} m"
+                        if d.get("distance_cm") is not None
+                        else d["dist"]
+                    ),
                     "Approaching": (
                         "Yes" if d["approaching"] else "No"
                     )

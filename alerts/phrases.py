@@ -45,7 +45,7 @@ DISTANCE_NAMES = {
 
 
 def get_alert_phrase(label, zone, distance, language="en", detailed=False,
-                     approaching=False):
+                     approaching=False, distance_cm=None):
     """Create a short spoken alert in English or Hindi."""
 
     language = language.lower()
@@ -74,7 +74,14 @@ def get_alert_phrase(label, zone, distance, language="en", detailed=False,
         else:
             message = f"{object_name} {direction}."
 
-        if detailed and distance_text:
+        if detailed:
+            if distance_cm is not None:
+                distance_m = distance_cm / 100
+                message = (
+                    f"{object_name} {direction}, "
+                    f"approximately {distance_m:.1f} metres."
+                )
+        elif distance_text:
             message = f"{object_name} {direction}, {distance_text}."
 
         return message
@@ -84,7 +91,14 @@ def get_alert_phrase(label, zone, distance, language="en", detailed=False,
     else:
         message = f"{object_name} {direction} है।"
 
-    if detailed and distance_text:
-        message = f"{object_name} {direction} है, {distance_text}।"
+    if detailed:
+        if distance_cm is not None:
+            distance_m = distance_cm / 100
+            message = (
+                f"{object_name} {direction} है, "
+                f"लगभग {distance_m:.1f} मीटर दूर।"
+            )
+        elif distance_text:
+            message = f"{object_name} {direction} है, {distance_text}।"
 
     return message
