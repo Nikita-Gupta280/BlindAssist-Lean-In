@@ -621,12 +621,6 @@ A missed detection must never be interpreted as evidence that a walking path is 
 
 ---
 
-## 🔗 Project Links
-
-- *Demo Video:* [Watch Demonstration](https://drive.google.com/file/d/1CDTJ0sJ-_GfmFUqyIDP8dCcxYcEMl__m/view?usp=drivesdk)
-
----
-
 ## ❤️ Our Mission
 
 A conventional white cane helps detect obstacles through physical contact.
