@@ -22,11 +22,18 @@ class CameraStream:
         )
 
         self.thread.start()
+
+        print("Camera initialization thread started.")
+
         return self
 
     def update(self):
 
+        first_frame = True
+
         while self.running:
+
+            camera_start = time.perf_counter()
 
             cap = cv2.VideoCapture(self.source)
             cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
@@ -40,7 +47,10 @@ class CameraStream:
                 time.sleep(2)
                 continue
 
-            print("Camera connected!")
+            print(
+                f"Camera connected in "
+                f"{time.perf_counter() - camera_start:.2f} seconds"
+            )
 
             while self.running:
 
@@ -52,6 +62,13 @@ class CameraStream:
 
                 with self.lock:
                     self.frame = frame
+
+                if first_frame:
+                    print(
+                        f"First camera frame received in "
+                        f"{time.perf_counter() - camera_start:.2f} seconds"
+                    )
+                    first_frame = False
 
             cap.release()
             time.sleep(2)

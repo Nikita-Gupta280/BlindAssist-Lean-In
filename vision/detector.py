@@ -1,3 +1,4 @@
+
 import time
 import torch
 from ultralytics import YOLO
@@ -28,7 +29,13 @@ class ObjectDetector:
         if model_path is None:
             model_path = MODEL_PATH
 
+        start_load = time.perf_counter()
         self.model = YOLO(model_path)
+
+        print(
+            f"YOLO MODEL LOAD TIME: "
+            f"{time.perf_counter() - start_load:.2f} seconds"
+        )
 
         self.logic = VisionLogic(
             focal_px=FOCAL_PX,
@@ -41,14 +48,14 @@ class ObjectDetector:
         self.frame_status = {}
 
         self.total_frames = 0
-        
         self.total_time = 0.0
         self.current_fps = 0.0
         self.average_fps = 0.0
 
     def detect(self, frame):
-        
+
         start_time = time.perf_counter()
+
         self.frame_status = self.quality.check(frame)
 
         if (
@@ -100,11 +107,16 @@ class ObjectDetector:
                     frame.shape[1]
                 )
 
-                distance_cm = self.logic.get_distance_cm(coordinates, label)
-                distance = self.logic.get_distance(coordinates, label)
+                distance_cm = self.logic.get_distance_cm(
+                    coordinates, label
+                )
+
+                distance = self.logic.get_distance(
+                    coordinates, label
+                )
+
                 approaching = self.logic.is_approaching(
-                    track_id,
-                    coordinates
+                    track_id, coordinates
                 )
 
                 detections.append({
@@ -118,15 +130,24 @@ class ObjectDetector:
                     "unknown_obstacle": False
                 })
 
-                elapsed_time = time.perf_counter() - start_time
+        # Calculate FPS once per processed frame
+        elapsed_time = time.perf_counter() - start_time
 
-                self.total_frames += 1
-                self.total_time += elapsed_time
+        self.total_frames += 1
+        self.total_time += elapsed_time
 
-                self.current_fps = 1 / elapsed_time if elapsed_time > 0 else 0
-                self.average_fps = self.total_frames / self.total_time if self.total_time > 0 else 0
-                print(
-                    f"Detection FPS: {self.current_fps:.2f} | "
-                    f"Average FPS: {self.average_fps:.2f}"
-                )
+        self.current_fps = (
+            1 / elapsed_time if elapsed_time > 0 else 0
+        )
+
+        self.average_fps = (
+            self.total_frames / self.total_time
+            if self.total_time > 0 else 0
+        )
+
+        print(
+            f"Detection FPS: {self.current_fps:.2f} | "
+            f"Average FPS: {self.average_fps:.2f}"
+        )
+
         return detections

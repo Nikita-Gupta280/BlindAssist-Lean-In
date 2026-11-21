@@ -6,7 +6,6 @@ import queue
 import threading
 import pythoncom
 
-from vision.detector import ObjectDetector
 from vision.stream import CameraStream
 from alerts.alert_manager import AlertManager
 from alerts.speech import Speech
@@ -116,8 +115,9 @@ def vision_worker(runtime, stop_event, audio_queue):
     try:
 
         camera = CameraStream(source=CAMERA_SOURCE).start()
-
+        from vision.detector import ObjectDetector
         detector = ObjectDetector()
+        
 
         alert_manager = AlertManager(cooldown=10.0)
 
