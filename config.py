@@ -2,7 +2,7 @@
 # Blind Assist - Vision Configuration
 
 # Camera
-CAMERA_SOURCE = 0
+CAMERA_SOURCE = 1
 
 # YOLO Model
 MODEL_PATH = "yolov8n.pt"

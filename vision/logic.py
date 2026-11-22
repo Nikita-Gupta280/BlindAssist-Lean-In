@@ -73,7 +73,7 @@ class VisionLogic:
         "oven": 60,
         "toaster": 20,
         "sink": 25,
-        "refrigerator": 170,
+        "refrigerator": 110,
         "book": 25,
         "clock": 30,
         "vase": 30,
@@ -123,25 +123,17 @@ class VisionLogic:
             return None
 
         normalized_label = self.normalize_label(label)
-
-        # Do not invent a physical size for an unknown object.
         real_height_cm = self.OBJECT_HEIGHTS.get(normalized_label)
 
         if real_height_cm is None:
             return None
 
-        # Monocular pinhole-camera estimate:
-        # distance = (real object height x focal length in pixels)
-        #            / object's height in image pixels
-        distance_cm = (
-            real_height_cm * self.focal_px
-        ) / height_px
+        distance_cm = (real_height_cm * self.focal_px) / height_px
 
         if not 0 < distance_cm < 2000:
             return None
 
         return round(distance_cm, 1)
-
     def get_distance(self, box, label=None):
         distance_cm = self.get_distance_cm(box, label)
 

@@ -194,6 +194,11 @@ class ObjectDetector:
             label = item["label"]
             track_id = item["id"]
 
+            if label == "person":
+                x1, y1, x2, y2 = coordinates
+                height_px = y2 - y1
+                print(f"PERSON BOX HEIGHT: {height_px:.1f} pixels")
+
             zone = self.logic.get_zone(
                 coordinates,
                 frame.shape[1]
@@ -215,7 +220,7 @@ class ObjectDetector:
             ) if track_id is not None else False
 
             detections.append({
-                "label": label,
+                "label": "cupboard" if label == "refrigerator" else label,
                 "id": track_id,
                 "conf": item["conf"],
                 "zone": zone,

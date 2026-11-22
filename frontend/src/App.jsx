@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import "./App.css";
 
-const API = "http://127.0.0.1:8001";
+const API = "http://127.0.0.1:8000";
 
 const HINDI_LABELS = {
   person: "व्यक्ति",
@@ -68,6 +68,7 @@ export default function App() {
 
   const voiceUnlocked = useRef(false);
   const lastSpoken = useRef("");
+  const pendingSpeech = useRef(null);
   const latestDetections = useRef([]);
   const announcementTimer = useRef(null);
   const lastLanguage = useRef("English");
@@ -76,6 +77,7 @@ export default function App() {
     if (!("speechSynthesis" in window)) return;
 
     window.speechSynthesis.cancel();
+    pendingSpeech.current = null;
 
     if (announcementTimer.current) {
       clearTimeout(announcementTimer.current);
@@ -168,7 +170,15 @@ export default function App() {
     return AlertTriangle;
   };
 
-  const getDirection = (zone) => zone || "Direction unavailable";
+  const getDirection = (zone) => {
+    if (!zone) return "Direction unavailable";
+
+    return zone
+      .toLowerCase()
+      .replace(/_/g, " ")
+      .replace(/-/g, " ");
+  };
+
 
   const nearest = detections.length
     ? [...detections].sort(
@@ -177,52 +187,84 @@ export default function App() {
     : null;
 
   // Speak one complete announcement at a time.
+  
+
+  // Speak announcements one at a time without interrupting the current sentence.
   const speak = (message, selectedLanguage = language) => {
     if (!("speechSynthesis" in window) || !message) return;
 
     const synth = window.speechSynthesis;
 
-    // Cancel old speech so stale announcements cannot pile up.
-    synth.cancel();
+    const createUtterance = (text, lang) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = synth.getVoices();
 
-    const utterance = new SpeechSynthesisUtterance(message);
-    const voices = synth.getVoices();
+      if (lang === "Hindi") {
+        const hindiVoice =
+          voices.find(v => v.lang.toLowerCase() === "hi-in") ||
+          voices.find(v => v.lang.toLowerCase().startsWith("hi"));
 
-    if (selectedLanguage === "Hindi") {
-      const hindiVoice =
-        voices.find(v => v.lang.toLowerCase() === "hi-in") ||
-        voices.find(v => v.lang.toLowerCase().startsWith("hi"));
+        utterance.lang = "hi-IN";
+        if (hindiVoice) {
+          utterance.voice = hindiVoice;
+          utterance.lang = hindiVoice.lang;
+        }
+      } else {
+        const englishVoice =
+          voices.find(v => v.lang.toLowerCase() === "en-in") ||
+          voices.find(v => v.lang.toLowerCase().startsWith("en"));
 
-      utterance.lang = "hi-IN";
-
-      if (hindiVoice) {
-        utterance.voice = hindiVoice;
-        utterance.lang = hindiVoice.lang;
+        utterance.lang = "en-IN";
+        if (englishVoice) {
+          utterance.voice = englishVoice;
+          utterance.lang = englishVoice.lang;
+        }
       }
-    } else {
-      const englishVoice =
-        voices.find(v => v.lang.toLowerCase() === "en-in") ||
-        voices.find(v => v.lang.toLowerCase().startsWith("en-in")) ||
-        voices.find(v => v.lang.toLowerCase().startsWith("en"));
 
-      utterance.lang = "en-IN";
+      utterance.rate =
+        intensity === "High" ? 1.15 :
+        intensity === "Low" ? 0.85 : 1;
 
-      if (englishVoice) {
-        utterance.voice = englishVoice;
-        utterance.lang = englishVoice.lang;
-      }
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      return utterance;
+    };
+
+    const playNextPending = () => {
+      const next = pendingSpeech.current;
+      pendingSpeech.current = null;
+
+      if (!next) return;
+
+      const nextUtterance = createUtterance(
+        next.message,
+        next.language
+      );
+
+      nextUtterance.onend = playNextPending;
+      nextUtterance.onerror = playNextPending;
+
+      synth.resume();
+      synth.speak(nextUtterance);
+    };
+
+    if (synth.speaking || synth.pending) {
+      pendingSpeech.current = {
+        message,
+        language: selectedLanguage
+      };
+      return;
     }
 
-    utterance.rate =
-      intensity === "High" ? 1.15 :
-      intensity === "Low" ? 0.85 : 1;
-
-    utterance.pitch = 1;
-    utterance.volume = 1;
+    const utterance = createUtterance(message, selectedLanguage);
+    utterance.onend = playNextPending;
+    utterance.onerror = playNextPending;
 
     synth.resume();
     synth.speak(utterance);
   };
+
+
 
   // Fetch backend status.
   useEffect(() => {
@@ -355,9 +397,7 @@ export default function App() {
       const risk = getRisk(item);
 
       const distanceText = Number.isFinite(cm)
-        ? cm >= 100
-          ? `${(cm / 100).toFixed(1)} ${selectedLanguage === "Hindi" ? "मीटर" : "metres"}`
-          : `${Math.round(cm)} ${selectedLanguage === "Hindi" ? "सेंटीमीटर" : "centimetres"}`
+        ? `${(cm / 100).toFixed(1)} ${selectedLanguage === "Hindi" ? "मीटर" : "metres"}`
         : "";
 
       if (selectedLanguage === "Hindi") {
@@ -381,7 +421,7 @@ export default function App() {
             ? "Caution. Move slowly."
             : "Proceed carefully.";
 
-      return `${index + 1}. ${label}, ${zone}${distanceText ? `, ${distanceText}` : ""}. ${warning}`;
+      return `${index + 1}. ${label}, ${getDirection(zone)}${distanceText ? `, ${distanceText}` : ""}. ${warning}`;
     });
 
     const message =
@@ -422,7 +462,8 @@ export default function App() {
     // Small debounce so rapid frame changes don't trigger speech repeatedly.
     announcementTimer.current = setTimeout(() => {
       if (!running || !voiceUnlocked.current) return;
-
+      
+      console.log("Hindi announcement triggered:", signature, language);
       lastSpoken.current = signature;
       announceObjects(latestDetections.current, language);
     }, 1000);
