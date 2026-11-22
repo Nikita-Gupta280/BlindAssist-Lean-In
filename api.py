@@ -15,7 +15,9 @@ app = FastAPI(title="Blind Assist API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+    "http://localhost:5173",
+    "https://blind-assist-lean-in-faei.vercel.app",],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
