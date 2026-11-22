@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import "./App.css";
 
-const API = "https://programming-annual-paxil-creek.trycloudflare.com";
+const API = "https://scale-employer-zen-mic.trycloudflare.com";
 
 const HINDI_LABELS = {
   person: "व्यक्ति",
