@@ -17,7 +17,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
     "http://localhost:5173",
-    "https://blind-assist-lean-in-faei.vercel.app",],
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "https://blind-assist-lean-in.vercel.app",
+    "https://blind-assist-lean-in-faei.vercel.app",
+],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

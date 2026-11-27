@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import "./App.css";
 
-const API = "https://parenting-yale-gym-light.trycloudflare.com";
+const API = "https://food-wow-subsidiary-browse.trycloudflare.com";
 
 const HINDI_LABELS = {
   person: "व्यक्ति",
@@ -395,6 +395,7 @@ export default function App() {
       const zone = getZone(item);
       const cm = getDistanceCm(item);
       const risk = getRisk(item);
+      const isApproaching = item.approaching === true;
 
       const distanceText = Number.isFinite(cm)
         ? `${(cm / 100).toFixed(1)} ${selectedLanguage === "Hindi" ? "मीटर" : "metres"}`
@@ -404,8 +405,9 @@ export default function App() {
         const hindiLabel = getHindiLabel(label);
         const hindiZone = getHindiDirection(zone);
 
-        const warning =
-          risk === "High"
+        const warning = isApproaching
+          ? "वस्तु आपकी ओर आ रही है। सावधान रहें।"
+          : risk === "High"
             ? "बहुत पास है। रुक जाइए।"
             : risk === "Moderate"
               ? "सावधान। धीरे चलें।"
@@ -414,8 +416,9 @@ export default function App() {
         return `${index + 1}. ${hindiLabel}, ${hindiZone}${distanceText ? `, ${distanceText}` : ""}। ${warning}`;
       }
 
-      const warning =
-        risk === "High"
+      const warning = isApproaching
+        ? "Object approaching. Be careful."
+        : risk === "High"
           ? "Very close. Stop."
           : risk === "Moderate"
             ? "Caution. Move slowly."
