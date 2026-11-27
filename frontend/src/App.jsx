@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import "./App.css";
 
-const API = "https://scale-employer-zen-mic.trycloudflare.com";
+const API = "https://parenting-yale-gym-light.trycloudflare.com";
 
 const HINDI_LABELS = {
   person: "व्यक्ति",
@@ -295,7 +295,7 @@ export default function App() {
     };
 
     fetchStatus();
-    const interval = setInterval(fetchStatus, 1000);
+    const interval = setInterval(fetchStatus, 300);
 
     return () => {
       active = false;
@@ -466,7 +466,7 @@ export default function App() {
       console.log("Hindi announcement triggered:", signature, language);
       lastSpoken.current = signature;
       announceObjects(latestDetections.current, language);
-    }, 1000);
+    }, 300);
 
     return () => {
       if (announcementTimer.current) {
