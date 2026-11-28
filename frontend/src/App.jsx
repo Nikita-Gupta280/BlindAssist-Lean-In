@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import "./App.css";
 
-const API = "https://food-wow-subsidiary-browse.trycloudflare.com";
+const API = "https://handled-sleep-muze-trailers.trycloudflare.com";
 
 const HINDI_LABELS = {
   person: "व्यक्ति",
